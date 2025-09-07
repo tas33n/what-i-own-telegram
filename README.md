@@ -1,6 +1,6 @@
 # what-i-own-telegram
 
-A CLI tool to audit and explore the **groups** and **channels** you own or administer with your Telegram user account.  
+A CLI tool to audit, explore, and manage the **groups** and **channels** you own or administer with your Telegram user account.
 Built using [GramJS](https://github.com/gram-js/gramjs).
 
 ## Features
@@ -8,9 +8,15 @@ Built using [GramJS](https://github.com/gram-js/gramjs).
 - Authenticate with your Telegram user account (via MTProto session).
 - Detect and list **groups** and **channels** where you are an **owner** or **admin**.
 - Show creation date, last interaction date, and status (active, left, deactivated, inaccessible).
-- Trminal output for easy distinction between owner/admin/inaccessible.
-- Interactive CLI menu with options to view groups/channels or export results.
+- Terminal output with color coding for easy distinction between owner/admin/inaccessible.
 - Export data to **TXT** or **CSV** with full metadata (IDs, usernames, roles, timestamps).
+- **Create new groups (supergroups) and channels**:
+
+  - Name them from a **wordlist file** or generate random names.
+  - Add serial counters to names (e.g., _Project (001)_, _Project (002)_).
+  - Invite specific users by ID or @username.
+  - Post an initial seeded message with hashtags for easy discovery later.
+  - Enforce **history visibility** so all past messages are visible to new members.
 
 ## Installation
 
@@ -23,22 +29,23 @@ npm install
 ## Usage
 
 1. Create an app at [my.telegram.org](https://my.telegram.org) to get your `API_ID` and `API_HASH`.
+
 2. Export them in your shell before running:
 
-3. Create a `.env` file in the project folder (see `.env.example` for reference) and add your credentials:
+   ```bash
+   TELEGRAM_API_ID=123456
+   TELEGRAM_API_HASH=abcdef1234567890
+   ```
 
-```
-TELEGRAM_API_ID=123456
-TELEGRAM_API_HASH=abcdef1234567890
-```
+   Or create a `.env` file in the project folder (see `.env.example`).
 
-4. Run the CLI tool:
+3. Run the CLI tool:
 
-```bash
-node bot.js
-```
+   ```bash
+   node app.js
+   ```
 
-3. On first run, you will be prompted for your phone number, login code, and 2FA password if set.  
+4. On first run, you will be prompted for your phone number, login code, and 2FA password if set.
    Your session will be saved locally (`session.txt`).
 
 ## Menu Options
@@ -47,22 +54,39 @@ node bot.js
 - Show channels where you are owner/admin.
 - Dump groups to TXT/CSV.
 - Dump channels to TXT/CSV.
+- **Create groups (supergroups):**
+
+  - Bulk create groups with wordlist/random names.
+  - Invite users by ID or username.
+  - Post initial seeded message + hashtags.
+  - Automatically ensure all history is visible to new members.
+
+- **Create channels (broadcast):**
+
+  - Bulk create channels with wordlist/random names.
+  - Invite users.
+  - Post initial seeded message + hashtags.
+  - Automatically ensure all history is visible to new members.
 
 ## Output Examples
 
-**Console:**  
-- Owners are shown in **green**.  
-- Admins are shown in **yellow**.  
-- Inaccessible/deactivated groups are shown in **red**.
+**Console:**
 
-**Exports:**  
-- TXT: human-readable text with all metadata.  
+- Owners are shown in **green**.
+- Admins are shown in **yellow**.
+- Inaccessible/deactivated groups are shown in **red**.
+- Creation logs show each group/channel creation with success/failure and history status.
+
+**Exports:**
+
+- TXT: human-readable text with all metadata.
 - CSV: Excel/Sheets-friendly, with proper UTF-8 BOM and separator hints.
 
 ## Author
 
-Made with ❤️ by **tas33n**  
-- GitHub: [tas33n](https://github.com/tas33n)  
+Made with ❤️ by **tas33n**
+
+- GitHub: [tas33n](https://github.com/tas33n)
 - Telegram Channel: [Join Here](https://t.me/misfitdev)
 
 ---

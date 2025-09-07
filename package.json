@@ -1,4 +1,33 @@
 {
+  "name": "what-i-own-telegram",
+  "version": "2.0.0",
+  "description": "CLI to audit, explore, and manage Telegram groups/channels you own or admin.",
+  "license": "MIT",
+  "author": "tas33n",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": [
+    "telegram",
+    "cli",
+    "gramjs",
+    "groups",
+    "channels",
+    "admin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tas33n/what-i-own-telegram.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tas33n/what-i-own-telegram/issues"
+  },
+  "homepage": "https://github.com/tas33n/what-i-own-telegram#readme",
+  "engines": {
+    "node": ">=16"
+  },
   "dependencies": {
     "ansi-colors": "^4.1.3",
     "boxen": "^5.1.2",
