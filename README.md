@@ -1,4 +1,4 @@
-# whats-i-own-telegram
+# what-i-own-telegram
 
 A CLI tool to audit and explore the **groups** and **channels** you own or administer with your Telegram user account.  
 Built using [GramJS](https://github.com/gram-js/gramjs).
@@ -15,8 +15,8 @@ Built using [GramJS](https://github.com/gram-js/gramjs).
 ## Installation
 
 ```bash
-git clone https://github.com/tas33n/whats-i-own-telegram.git
-cd whats-i-own-telegram
+git clone https://github.com/tas33n/what-i-own-telegram.git
+cd what-i-own-telegram
 npm install
 ```
 
