@@ -4,6 +4,7 @@ const fsp = require("fs/promises");
 const path = require("path");
 
 const DELAY_MS = 800;
+const DEFAULT_POST_DELAY_MS = Number(process.env.CREATOR_POST_INTERVAL_MS || 1500);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // -------------------- helpers --------------------
@@ -123,6 +124,58 @@ async function postSeedMessage(client, peer, text, tags = []) {
   await client.sendMessage(peer, { message: `${text}${tagLine}` });
 }
 
+// Send a message while respecting Telegram flood waits
+async function floodSafeSend(client, peer, message) {
+  try {
+    await client.sendMessage(peer, { message, parseMode: "html" });
+    return true;
+  } catch (e) {
+    const msg = e && (e.message || e.toString());
+    // Try to parse FLOOD_WAIT seconds
+    let waitSec = 0;
+    if (typeof e?.seconds === "number" && e.seconds > 0) waitSec = e.seconds;
+    else if (msg && /FLOOD_WAIT_(\d+)/.test(msg)) {
+      try {
+        waitSec = parseInt(msg.match(/FLOOD_WAIT_(\d+)/)[1], 10) || 0;
+      } catch {}
+    }
+    if (waitSec > 0) {
+      console.log(c.yellow(`Flood wait ${waitSec}s — pausing then retrying...`));
+      await sleep((waitSec + 1) * 1000);
+      try {
+        await client.sendMessage(peer, { message });
+        return true;
+      } catch (e2) {
+        console.log(c.red(`Retry failed: ${e2 && (e2.message || e2)}`));
+        return false;
+      }
+    }
+    // Not a known flood wait error; bubble up as failure (but don't throw)
+    console.log(c.red(`Send failed: ${msg}`));
+    return false;
+  }
+}
+
+async function postMultipleMessages({
+  client,
+  peer,
+  count,
+  firstMessage,
+  followupMessage,
+  hashtags = [],
+}) {
+  const total = Math.max(1, Number(count || 1));
+  for (let i = 0; i < total; i++) {
+    const base = i === 0 ? firstMessage : followupMessage;
+    const tagLine = hashtags.length
+      ? `\n\n${hashtags.map((t) => (t.startsWith("#") ? t : `#${t}`)).join(" ")}`
+      : "";
+    const text = `${base}${tagLine}`;
+    await floodSafeSend(client, peer, text);
+    if (i < total - 1) await sleep(DEFAULT_POST_DELAY_MS);
+  }
+}
+
 // -------------------- orchestrator --------------------
 async function makeEntities({
   client,
@@ -132,11 +185,18 @@ async function makeEntities({
   inviteIds = [],
   seedMessage = "Welcome! This space was created automatically.",
   hashtags = ["misfitdev", "autocreated", "finder"],
+  app,
 }) {
   const wl = await loadWordlist(wordlistPath);
   const bases = wl.length ? wl : randomWords(count);
   const pad = String(count).length;
   const inputUsers = await toInputUsers(client, inviteIds);
+
+  // How many messages to send per newly created entity
+  const postCount = Math.max(
+    1,
+    Number(process.env.CREATOR_POST_COUNT || process.env.POST_MESSAGE_COUNT || 1)
+  );
 
   const made = [];
   let ok = 0,
@@ -156,7 +216,22 @@ async function makeEntities({
         created = await createBroadcastChannel(client, title);
         await inviteToChannelOrSupergroup(client, created, inputUsers);
       }
-      await postSeedMessage(client, created, seedMessage, hashtags);
+      // Compose promotional first message
+      const promo =
+        `This space was created with ${app?.name || "our CLI"} — it\'s free!` +
+        `Promo: Join <a href="${app?.channel || "https://t.me/misfitdev"}">${
+          app?.channel || "@misfitdev"
+        }</a> — subscribe and please ⭐ the repo: <a href="${
+          app?.repo || "https://github.com/misfitdev/what-i-own-telegram"
+        }">${app?.repo || "GitHub repo"}</a>.`;
+      await postMultipleMessages({
+        client,
+        peer: created,
+        count: postCount,
+        firstMessage: `${promo}\n\n${seedMessage}`,
+        followupMessage: seedMessage,
+        hashtags,
+      });
       console.log(c.green(`OK (id: ${created.id})`));
       made.push({ id: String(created.id), title, type });
       ok++;
@@ -193,7 +268,7 @@ module.exports = {
     );
 
     const useCustomMsg = await askYesNo(ask, "Add a custom seed message?", "n");
-    let seedMessage = "Hello everyone! This space was created automatically.";
+    let seedMessage = "This space was created automatically.";
     if (useCustomMsg) seedMessage = await ask("Enter message: ");
 
     const tagLine = await ask(
@@ -215,6 +290,7 @@ module.exports = {
       inviteIds,
       seedMessage,
       hashtags,
+      app: ctx.app,
     });
   },
 };
